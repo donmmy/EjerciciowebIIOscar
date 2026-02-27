@@ -1,0 +1,24 @@
+{
+  "name": "proyectodbs",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file=.env src/app.js",
+    "start": "node --env-file=.env src/app.js"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "mongoose": "^8.23.0",
+    "multer": "^2.0.2",
+    "zod": "^4.3.6"
+  }
+}
