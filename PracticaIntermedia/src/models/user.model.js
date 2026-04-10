@@ -100,8 +100,19 @@ const userSchema = new mongoose.Schema(
         updatedAt: Date
     },
     {
-        timestamps: true
+        timestamps: true,
+        versionKey: false
     }
 )
+
+userSchema.index({ email: 1 });
+userSchema.index({ role: 1, status: 1 });
+userSchema.index({ company: 1 });
+
+userSchema.methods.toJSON = function () {
+    const user = this.toObject();
+    delete user.password;
+    return user;
+};
 
 export default mongoose.model('User', userSchema);
