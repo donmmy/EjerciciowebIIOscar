@@ -1,6 +1,13 @@
 import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema(
+const userSchema = new mongoose.userSchema({
+  name: String,            // Requerido, mín 2 chars
+  email: String,           // Requerido, único, formato email
+  password: String,        // Requerido, mín 8 chars (guardar hasheado)
+  role: String,            // Enum: ['user', 'admin'], default: 'user'
+  createdAt: Date          // timestamps: true
+})
+/*const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -33,4 +40,4 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model('User', userSchema);
+export default mongoose.model('User', userSchema);   */
