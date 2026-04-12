@@ -130,3 +130,41 @@ export const loginCtrl = async (req, res) => {
     handleHttpError(res, 'ERROR_LOGIN_USER');
   }
 };
+
+//PUT /api/user/validation
+export const validateEmailCtrl = async (req, res) => {
+    try {
+        const { code } = req.body;
+        const user = req.user; // Obtener usuario inyectado por authMiddleware
+
+        // Verificar si quedan intentos
+        if (user.verificationAttempts <= 0) {
+            return handleHttpError(res, 'TOO_MANY_REQUESTS', 429);
+        }
+
+        // Comparar el código
+        if (code === user.verificationCode) {
+            // Código correcto
+            user.status = 'verified';
+            // Limpiar el código para que no sea reutilizable
+            user.verificationCode = null;
+            user.verificationAttempts = 3; // Resetear intentos
+            await user.save();
+
+            return res.json({
+                message: "Email verificado correctamente",
+                status: user.status
+            });
+        } else {
+            // Código incorrecto
+            user.verificationAttempts -= 1;
+            await user.save();
+
+            return handleHttpError(res, `CÓDIGO_INVÁLIDO. Intentos restantes: ${user.verificationAttempts}`, 400);
+        }
+
+    } catch (error) {
+        console.error(error);
+        handleHttpError(res, 'ERROR_VALIDATING_EMAIL');
+    }
+};
