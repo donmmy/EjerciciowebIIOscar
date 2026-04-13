@@ -10,7 +10,9 @@ import {
     userLogo,
     getUser,
     refreshTokenCtrl,
-    logoutCtrl
+    logoutCtrl,
+    deleteUser,
+    changePassword
 } from '../controllers/user.controller.js';
 import { authMiddleware } from '../middleware/session.middleware.js';
 import { validateRequest } from '../middleware/validate.middleware.js';
@@ -55,5 +57,11 @@ router.get('/list', authMiddleware, getAllUsers);
 
 // Obtener usuario por ID
 router.get('/:id', authMiddleware, getUserById);
+
+// Eliminar usuario (soft delete)
+router.delete('/:id', authMiddleware, deleteUser);
+
+//nueva contraseña
+router.post('/change-password', authMiddleware, validateRequest(newPasswordValidator), changePassword);
 
 export default router;

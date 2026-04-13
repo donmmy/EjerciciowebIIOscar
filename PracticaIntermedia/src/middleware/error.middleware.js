@@ -1,38 +1,63 @@
+import { AppError } from '../utils/AppError.js';
+
 export const notFound = (req, res, next) => {
   res.status(404).json({
     error: true,
+    statusCode: 404,
     message: `Ruta ${req.method} ${req.originalUrl} no encontrada`
   });
 };
 
-export const errorHandler = (err, req, res, next) => {
-  console.error('❌ Error:', err.message);
+/**
+ * Middleware centralizado de manejo de errores
+ * Gestiona errores de la aplicación, JWT, Mongoose, Zod y otros
+ */
+export const errorMiddleware = (err, req, res, next) => {
+  console.error('❌ Error:', {
+    message: err.message,
+    name: err.name,
+    statusCode: err.statusCode || 500,
+    stack: err.stack
+  });
 
-  // JWT errors
+  // Errores de AppError (errores de aplicación controlados)
+  if (AppError.isAppError(err)) {
+    return res.status(err.statusCode).json(err.toJSON());
+  }
+
+  // Errores JWT
   if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({
-      error: true,
-      message: 'Token inválido'
-    });
+    const appError = AppError.unauthorized('Token inválido o malformado');
+    return res.status(appError.statusCode).json(appError.toJSON());
   }
 
   if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({
-      error: true,
-      message: 'Token expirado'
-    });
+    const appError = AppError.unauthorized('Token expirado');
+    return res.status(appError.statusCode).json(appError.toJSON());
   }
 
-  // Mongoose duplicate key
+  // Errores Mongoose - Validación
+  if (err.name === 'ValidationError') {
+    const messages = Object.values(err.errors).map(e => e.message);
+    const appError = AppError.badRequest(`Validación fallida: ${messages.join(', ')}`);
+    return res.status(appError.statusCode).json(appError.toJSON());
+  }
+
+  // Errores Mongoose - Cast (ID inválido)
+  if (err.name === 'CastError') {
+    const appError = AppError.badRequest('ID inválido');
+    return res.status(appError.statusCode).json(appError.toJSON());
+  }
+
+  // Errores Mongoose - Clave duplicada
   if (err.code === 11000) {
-    const field = Object.keys(err.keyValue || {})[0];
-    return res.status(409).json({
-      error: true,
-      message: `Ya existe un registro con ese '${field}'`
-    });
+    const field = Object.keys(err.keyValue || {})[0] || 'campo';
+    const message = `Ya existe un registro con ese '${field}'`;
+    const appError = AppError.conflict(message);
+    return res.status(appError.statusCode).json(appError.toJSON());
   }
 
-  // Zod validation error
+  // Errores Zod - Validación de esquema
   if (err.name === 'ZodError') {
     const details = err.errors.map(e => ({
       field: e.path.join('.'),
@@ -40,14 +65,22 @@ export const errorHandler = (err, req, res, next) => {
     }));
     return res.status(400).json({
       error: true,
+      statusCode: 400,
       message: 'Error de validación',
-      details
+      details,
+      timestamp: new Date()
     });
   }
 
-  // Generic error
-  res.status(err.statusCode || 500).json({
+  // Errores genéricos
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Error interno del servidor';
+  
+  res.status(statusCode).json({
     error: true,
-    message: err.message || 'Error interno del servidor'
+    statusCode,
+    message,
+    timestamp: new Date(),
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 };

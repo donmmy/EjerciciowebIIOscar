@@ -1,13 +1,13 @@
 import User from "../models/user.model.js";
 import Company from "../models/company.model.js";
-import { encrypt, compare } from '../utils/handlePassword.js';
+import { encrypt, compare, randomCode } from '../utils/handlePassword.js';
 import { tokenSign, longTokenSign, shortTokenSign, verifyToken } from '../utils/handleJwt.js';
-import { handleHttpError } from '../utils/handleError.js';
+import { AppError } from '../utils/AppError.js';
 import fs from 'fs';
 import path from 'path';
 
 //get all users
-export const getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res, next) => {
     try {
         const { page = 1, limit = 10, role, isActive } = req.query;
 
@@ -36,37 +36,35 @@ export const getAllUsers = async (req, res) => {
             }
         });
     } catch (error) {
-        handleHttpError(res, error);
+        throw error;
     }
 }
 
 //get user by id
-export const getUserById = async (req, res) => {
+export const getUserById = async (req, res, next) => {
     try {
         const user = await User.findById(req.params.id);
         if (!user) {
-            return handleHttpError(res, 'User not found', 404);
+            throw AppError.notFound('Usuario no encontrado');
         }
         res.json(user);
     } catch (error) {
-        handleHttpError(res, error);
+        next(error);
     }
 }
 
 //POST register user
-export const registerCtrl = async (req, res) => {
+export const registerCtrl = async (req, res, next) => {
   try {
     // Verificar si el email ya existe
     const existingUser = await User.findOne({ email: req.body.email });
     if (existingUser) {
-      handleHttpError(res, 'EMAIL_ALREADY_EXISTS', 409);
-      return;
+      throw AppError.conflict('Email ya registrado');
     }
     //verificar nif
     const existingNif = await User.findOne({ nif: req.body.nif });
     if (existingNif) {
-      handleHttpError(res, 'NIF_ALREADY_EXISTS', 409);
-      return;
+      throw AppError.conflict('NIF ya registrado');
     }
 
     //cifrar verificationCode
@@ -92,12 +90,12 @@ export const registerCtrl = async (req, res) => {
     res.status(201).send(data);
   } catch (err) {
     console.log(err);
-    handleHttpError(res, 'ERROR_REGISTER_USER');
+    next(AppError.internalServerError('Error al registrar usuario'));
   }
 };
 
 //PUT /api/user/register - Actualizar datos personales
-export const basicRegister = async (req, res) => {
+export const basicRegister = async (req, res, next) => {
   try {
     const { name, lastName, nif } = req.body;
     const user = req.user; // Obtener usuario del token
@@ -106,7 +104,7 @@ export const basicRegister = async (req, res) => {
     if (nif !== user.nif) {
       const existingNif = await User.findOne({ nif });
       if (existingNif) {
-        return handleHttpError(res, 'NIF_ALREADY_EXISTS', 409);
+        throw AppError.conflict('NIF ya registrado');
       }
     }
 
@@ -118,12 +116,12 @@ export const basicRegister = async (req, res) => {
     const updatedUser = await user.save();
     res.json(updatedUser);
   } catch (error) {
-    handleHttpError(res, error);
+    next(error);
   }
 };
 
 //PATCH /api/user/company - Asignar compañía
-export const userCompany = async (req, res) => {
+export const userCompany = async (req, res, next) => {
   try {
     const { name, cif, address, isFreelance } = req.body;
     const user = req.user; // Obtener usuario del token
@@ -163,12 +161,12 @@ export const userCompany = async (req, res) => {
     const updatedUser = await user.save();
     res.json(updatedUser);
   } catch (error) {
-    handleHttpError(res, error);
+    next(error);
   }
 };
 
 //POST login user
-export const loginCtrl = async (req, res) => {
+export const loginCtrl = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     
@@ -176,8 +174,7 @@ export const loginCtrl = async (req, res) => {
     const user = await User.findOne({ email }).select('password name role email');
     
     if (!user) {
-      handleHttpError(res, 'USER_NOT_EXISTS', 404);
-      return;
+      throw AppError.notFound('Usuario no encontrado');
     }
     
     // Comparar contraseñas
@@ -185,8 +182,7 @@ export const loginCtrl = async (req, res) => {
     const check = await compare(password, hashPassword);
     
     if (!check) {
-      handleHttpError(res, 'INVALID_PASSWORD', 401);
-      return;
+      throw AppError.unauthorized('Contraseña incorrecta');
     }
     
     // Ocultar password en la respuesta
@@ -201,19 +197,19 @@ export const loginCtrl = async (req, res) => {
     res.send(data);
   } catch (err) {
     console.log(err);
-    handleHttpError(res, 'ERROR_LOGIN_USER');
+    next(AppError.internalServerError('Error al iniciar sesión'));
   }
 };
 
 //PUT /api/user/validation
-export const validateEmailCtrl = async (req, res) => {
+export const validateEmailCtrl = async (req, res, next) => {
     try {
         const { code } = req.body;
         const user = req.user; // Obtener usuario inyectado por authMiddleware
 
         // Verificar si quedan intentos
         if (user.verificationAttempts <= 0) {
-            return handleHttpError(res, 'TOO_MANY_REQUESTS', 429);
+            throw AppError.tooManyRequests('Demasiados intentos fallidos, intenta más tarde');
         }
 
         // Comparar el código
@@ -234,34 +230,34 @@ export const validateEmailCtrl = async (req, res) => {
             user.verificationAttempts -= 1;
             await user.save();
 
-            return handleHttpError(res, `CÓDIGO_INVÁLIDO. Intentos restantes: ${user.verificationAttempts}`, 400);
+            throw AppError.badRequest(`Código inválido. Intentos restantes: ${user.verificationAttempts}`);
         }
 
     } catch (error) {
         console.error(error);
-        handleHttpError(res, 'ERROR_VALIDATING_EMAIL');
+        next(error);
     }
 };
 
 //PATCH /api/user/logo - Subir logo de la compañía
-export const userLogo = async (req, res) => {
+export const userLogo = async (req, res, next) => {
   try {
     const user = req.user; // Obtener usuario del token
 
     // Verificar que el usuario tiene una compañía
     if (!user.company) {
-      return handleHttpError(res, 'USER_NO_COMPANY', 400);
+      throw AppError.badRequest('Usuario no tiene compañía asignada');
     }
 
     // Verificar que se cargó un archivo
     if (!req.file) {
-      return handleHttpError(res, 'NO_FILE_UPLOADED', 400);
+      throw AppError.badRequest('Archivo no cargado');
     }
 
     // Obtener la compañía del usuario
     const company = await Company.findById(user.company);
     if (!company) {
-      return handleHttpError(res, 'COMPANY_NOT_FOUND', 404);
+      throw AppError.notFound('Compañía no encontrada');
     }
 
     // Eliminar logo anterior si existe
@@ -290,16 +286,20 @@ export const userLogo = async (req, res) => {
         fs.unlinkSync(filePath);
       }
     }
-    handleHttpError(res, error);
+    next(error);
   }
 };
 
 //GET /api/user - Obtener usuario autenticado
-export const getUser = async (req, res) => {
+export const getUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id)
       .populate('company') // Incluir datos completos de la compañía
       .select('-password');
+
+    if (!user) {
+      throw AppError.notFound('Usuario no encontrado');
+    }
 
     // Agregar fullName virtual
     const userWithFullName = user.toObject();
@@ -307,29 +307,29 @@ export const getUser = async (req, res) => {
 
     res.json(userWithFullName);
   } catch (error) {
-    handleHttpError(res, error);
+    next(error);
   }
 };
 
 //POST /api/user/refresh - Refrescar token
-export const refreshTokenCtrl = async (req, res) => {
+export const refreshTokenCtrl = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return handleHttpError(res, 'NO_REFRESH_TOKEN', 400);
+      throw AppError.badRequest('Refresh token no proporcionado');
     }
 
     // Verificar el refresh token
     const dataToken = verifyToken(refreshToken);
     if (!dataToken || !dataToken.userId) {
-      return handleHttpError(res, 'INVALID_REFRESH_TOKEN', 401);
+      throw AppError.unauthorized('Refresh token inválido o expirado');
     }
 
     // Buscar el usuario
     const user = await User.findById(dataToken.userId);
     if (!user) {
-      return handleHttpError(res, 'USER_NOT_FOUND', 401);
+      throw AppError.unauthorized('Usuario no encontrado');
     }
 
     // Generar nuevo access token
@@ -339,21 +339,96 @@ export const refreshTokenCtrl = async (req, res) => {
       accessToken: newAccessToken
     });
   } catch (error) {
-    handleHttpError(res, error);
+    next(error);
   }
 };
 
 //POST /api/user/logout - Cerrar sesión
-export const logoutCtrl = async (req, res) => {
+export const logoutCtrl = async (req, res, next) => {
   try {
     // En este caso, simplemente retornamos un ACK
     // En una implementación real, podrías invalidar el token en la BD
     // por ejemplo, agregándolo a una lista negra o eliminando el refreshToken almacenado
-
+    const user = req.user; // Obtener usuario del token
+    user.refreshToken = null; // Eliminar refresh token del usuario
+    await user.save();
     res.json({
       message: 'Sesión cerrada correctamente'
     });
   } catch (error) {
-    handleHttpError(res, error);
+    next(error);
   }
 };
+
+//delete user
+export const deleteUser = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            throw AppError.notFound('Usuario no encontrado');
+        }
+        if(!user.softDelete) {
+            await user.softDelete();
+            res.json({ message: 'Usuario eliminado correctamente' });
+        }else{
+          await user.hardDelete();
+          res.json({ message: 'Usuario eliminado permanentemente' });
+        }
+    } catch (error) {
+        next(error);
+    }
+}
+
+//put /api/user/password - Cambiar contraseña
+export const changePassword = async (req, res, next) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const user = req.user; // Obtener usuario del token 
+        if (!user) {
+            throw AppError.notFound('Usuario no encontrado');
+        }
+        // Verificar contraseña actual        
+        const check = await compare(currentPassword, user.password);
+        if (!check) {
+            throw AppError.unauthorized('Contraseña actual incorrecta');
+        }
+        // Cifrar nueva contraseña
+        user.password = await encrypt(newPassword);
+        await user.save();
+        res.json({ message: 'Contraseña cambiada correctamente' });
+    } catch (error) {
+        next(error);
+    }
+}
+
+//POST /api/user/invitar - Invitar usuario a la compañía (solo admin)
+export const inviteUser = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const user = req.user; // Obtener usuario del token
+        if (!user) {
+            throw AppError.notFound('Usuario no encontrado');
+        }
+        if (!user.company) {
+            throw AppError.badRequest('Usuario no tiene compañía asignada');
+        }
+        if (user.role !== 'admin') {
+            throw AppError.forbidden('Solo administradores pueden invitar usuarios');
+        }
+        // Verificar si el email ya existe
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            throw AppError.conflict('Email ya registrado');
+        }
+        // Crear usuario invitado con rol guest
+        const invitedUser = await User.create({
+            email,
+            company: user.company,
+            role: 'guest',
+            status: 'pending'
+        });
+        res.json({ message: 'Usuario invitado correctamente', user: invitedUser });
+    } catch (error) {
+        next(error);
+    }
+}

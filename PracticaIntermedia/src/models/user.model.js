@@ -25,6 +25,7 @@
 // fullName → name + ' ' + lastName*/
 
 import mongoose from "mongoose";
+import { softDeletePlugin } from "../plugins/softDelete.plugin";
 
 const userSchema = new mongoose.Schema(
     {
@@ -95,7 +96,10 @@ const userSchema = new mongoose.Schema(
             city: String,
             province: String
         },
-        deleted: Boolean,          // Soft delete
+        softDelete: {
+            type: Boolean,
+            default: false
+        },
         createdAt: Date,
         updatedAt: Date
     },
@@ -106,9 +110,25 @@ const userSchema = new mongoose.Schema(
     }
 )
 
-userSchema.index({ email: 1 });
-userSchema.index({ role: 1, status: 1 });
-userSchema.index({ company: 1 });
+// Índices de consulta frecuente optimizados
+// Índice único en email para búsquedas rápidas y prevención de duplicados
+userSchema.index({ email: 1 }, { unique: true, sparse: true });
+
+// Índice en status para filtrar usuarios verificados/pendientes
+userSchema.index({ status: 1 });
+
+// Índice en role para consultas por rol
+userSchema.index({ role: 1 });
+
+// Índice compuesto para filtros combinados comunes
+userSchema.index({ company: 1, role: 1 });
+userSchema.index({ company: 1, status: 1 });
+
+// Índice en createdAt para ordenamiento temporal
+userSchema.index({ createdAt: -1 });
+
+// Índice en nif para búsquedas por documento
+userSchema.index({ nif: 1 }, { sparse: true });
 
 // Virtual
 userSchema.virtual('fullName').get(function() {
@@ -120,5 +140,7 @@ userSchema.methods.toJSON = function () {
     delete user.password;
     return user;
 };
+
+userSchema.plugin(softDeletePlugin) // Agregar plugin de soft delete
 
 export default mongoose.model('User', userSchema);
