@@ -101,13 +101,19 @@ const userSchema = new mongoose.Schema(
     },
     {
         timestamps: true,
-        versionKey: false
+        versionKey: false,
+        toJSON: { virtuals: true }
     }
 )
 
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1, status: 1 });
 userSchema.index({ company: 1 });
+
+// Virtual
+userSchema.virtual('fullName').get(function() {
+    return `${this.name} ${this.lastName}`;
+});
 
 userSchema.methods.toJSON = function () {
     const user = this.toObject();

@@ -1,7 +1,10 @@
 import User from "../models/user.model.js";
+import Company from "../models/company.model.js";
 import { encrypt, compare } from '../utils/handlePassword.js';
-import { tokenSign } from '../utils/handleJwt.js';
+import { tokenSign, longTokenSign, shortTokenSign, verifyToken } from '../utils/handleJwt.js';
 import { handleHttpError } from '../utils/handleError.js';
+import fs from 'fs';
+import path from 'path';
 
 //get all users
 export const getAllUsers = async (req, res) => {
@@ -93,6 +96,77 @@ export const registerCtrl = async (req, res) => {
   }
 };
 
+//PUT /api/user/register - Actualizar datos personales
+export const basicRegister = async (req, res) => {
+  try {
+    const { name, lastName, nif } = req.body;
+    const user = req.user; // Obtener usuario del token
+
+    // Verificar si el NIF ya existe en otro usuario
+    if (nif !== user.nif) {
+      const existingNif = await User.findOne({ nif });
+      if (existingNif) {
+        return handleHttpError(res, 'NIF_ALREADY_EXISTS', 409);
+      }
+    }
+
+    // Actualizar usuario
+    user.name = name;
+    user.lastName = lastName;
+    user.nif = nif;
+
+    const updatedUser = await user.save();
+    res.json(updatedUser);
+  } catch (error) {
+    handleHttpError(res, error);
+  }
+};
+
+//PATCH /api/user/company - Asignar compañía
+export const userCompany = async (req, res) => {
+  try {
+    const { name, cif, address, isFreelance } = req.body;
+    const user = req.user; // Obtener usuario del token
+
+    let companyCif = cif;
+    let companyData = { name, address };
+
+    // Si es autónomo, usar NIF como CIF y rellenar datos automáticamente
+    if (isFreelance) {
+      companyCif = user.nif;
+      companyData = {
+        name: user.name + ' ' + user.lastName,
+        address: user.address || address
+      };
+    }
+
+    // Buscar si la compañía ya existe
+    let company = await Company.findOne({ cif: companyCif });
+
+    if (company) {
+      // Compañía existe: usuario se une como guest
+      user.company = company._id;
+      user.role = 'guest';
+    } else {
+      // Compañía no existe: crear nueva
+      const newCompany = await Company.create({
+        owner: user._id,
+        cif: companyCif,
+        ...companyData,
+        isFreelance
+      });
+
+      user.company = newCompany._id;
+      // El usuario mantiene su role admin si es el owner de una nueva compañía
+    }
+
+    const updatedUser = await user.save();
+    res.json(updatedUser);
+  } catch (error) {
+    handleHttpError(res, error);
+  }
+};
+
 //POST login user
 export const loginCtrl = async (req, res) => {
   try {
@@ -167,4 +241,119 @@ export const validateEmailCtrl = async (req, res) => {
         console.error(error);
         handleHttpError(res, 'ERROR_VALIDATING_EMAIL');
     }
+};
+
+//PATCH /api/user/logo - Subir logo de la compañía
+export const userLogo = async (req, res) => {
+  try {
+    const user = req.user; // Obtener usuario del token
+
+    // Verificar que el usuario tiene una compañía
+    if (!user.company) {
+      return handleHttpError(res, 'USER_NO_COMPANY', 400);
+    }
+
+    // Verificar que se cargó un archivo
+    if (!req.file) {
+      return handleHttpError(res, 'NO_FILE_UPLOADED', 400);
+    }
+
+    // Obtener la compañía del usuario
+    const company = await Company.findById(user.company);
+    if (!company) {
+      return handleHttpError(res, 'COMPANY_NOT_FOUND', 404);
+    }
+
+    // Eliminar logo anterior si existe
+    if (company.logo) {
+      const oldFilePath = path.join(path.dirname(new URL(import.meta.url).pathname), '../../uploads', path.basename(company.logo));
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+      }
+    }
+
+    // Actualizar URL del logo
+    const logoUrl = `/uploads/${req.file.filename}`;
+    company.logo = logoUrl;
+    await company.save();
+
+    res.json({
+      message: 'Logo actualizado correctamente',
+      logo: logoUrl,
+      company
+    });
+  } catch (error) {
+    // Si hay error, eliminar el archivo cargado
+    if (req.file) {
+      const filePath = path.join(path.dirname(new URL(import.meta.url).pathname), '../../uploads', req.file.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+    handleHttpError(res, error);
+  }
+};
+
+//GET /api/user - Obtener usuario autenticado
+export const getUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+      .populate('company') // Incluir datos completos de la compañía
+      .select('-password');
+
+    // Agregar fullName virtual
+    const userWithFullName = user.toObject();
+    userWithFullName.fullName = `${user.name} ${user.lastName}`;
+
+    res.json(userWithFullName);
+  } catch (error) {
+    handleHttpError(res, error);
+  }
+};
+
+//POST /api/user/refresh - Refrescar token
+export const refreshTokenCtrl = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return handleHttpError(res, 'NO_REFRESH_TOKEN', 400);
+    }
+
+    // Verificar el refresh token
+    const dataToken = verifyToken(refreshToken);
+    if (!dataToken || !dataToken.userId) {
+      return handleHttpError(res, 'INVALID_REFRESH_TOKEN', 401);
+    }
+
+    // Buscar el usuario
+    const user = await User.findById(dataToken.userId);
+    if (!user) {
+      return handleHttpError(res, 'USER_NOT_FOUND', 401);
+    }
+
+    // Generar nuevo access token
+    const newAccessToken = shortTokenSign(user);
+
+    res.json({
+      accessToken: newAccessToken
+    });
+  } catch (error) {
+    handleHttpError(res, error);
+  }
+};
+
+//POST /api/user/logout - Cerrar sesión
+export const logoutCtrl = async (req, res) => {
+  try {
+    // En este caso, simplemente retornamos un ACK
+    // En una implementación real, podrías invalidar el token en la BD
+    // por ejemplo, agregándolo a una lista negra o eliminando el refreshToken almacenado
+
+    res.json({
+      message: 'Sesión cerrada correctamente'
+    });
+  } catch (error) {
+    handleHttpError(res, error);
+  }
 };

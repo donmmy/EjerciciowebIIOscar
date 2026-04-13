@@ -24,4 +24,30 @@ export const loginValidator = z.object({
     email: z.string().email({message: "Email no válido"}).transform(email => email.toLowerCase()),
     password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres")
 });
+
+export const userInfoValidator = z.object({
+    name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100, "El nombre debe tener menos de 100 caracteres"),
+    lastName: z.string().min(2, "El apellido debe tener al menos 2 caracteres").max(100, "El apellido debe tener menos de 100 caracteres"),
+    nif: z.string().min(8, "El NIF debe tener al menos 8 caracteres").max(12, "El NIF debe tener menos de 12 caracteres"),
+});
+
+export const basicRegisterValidator = z.object({
+    name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100, "El nombre debe tener menos de 100 caracteres"),
+    lastName: z.string().min(2, "El apellido debe tener al menos 2 caracteres").max(100, "El apellido debe tener menos de 100 caracteres"),
+    nif: z.string().min(8, "El NIF debe tener al menos 8 caracteres").max(12, "El NIF debe tener menos de 12 caracteres"),
+});
+
+export const userCompanyValidator = z.object({
+    name: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(100, "El nombre debe tener menos de 100 caracteres"),
+    cif: z.string().min(8, "El CIF debe tener al menos 8 caracteres").max(12, "El CIF debe tener menos de 12 caracteres"),
+    address: z.object({
+        street: z.string().min(2, "La calle debe tener al menos 2 caracteres"),
+        number: z.string().min(1, "El número es requerido"),
+        postal: z.string().regex(/^\d{5}$/, "El código postal debe tener 5 dígitos"),
+        city: z.string().min(2, "La ciudad debe tener al menos 2 caracteres"),
+        province: z.string().min(2, "La provincia debe tener al menos 2 caracteres")
+    }),
+    isFreelance: z.boolean().default(false),
+});
+
 export default userValidator;
