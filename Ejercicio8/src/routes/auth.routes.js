@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { registerCtrl, loginCtrl, getMeCtrl } from '../controllers/auth.controller.js';
+import { registerCtrl, loginCtrl, getMeCtrl, updateMeCtrl } from '../controllers/auth.controller.js';
 import { validate } from '../middleware/validate.middleware.js';
 import { registerSchema, loginSchema } from '../validators/auth.validator.js';
 import authMiddleware from '../middleware/session.middleware.js';
@@ -90,5 +90,37 @@ router.post('/login', validate(loginSchema), loginCtrl);
  *         description: No autorizado
  */
 router.get('/me', authMiddleware, getMeCtrl);
+
+/**
+ * @openapi
+ * /api/auth/me:
+ *   put:
+ *     tags:
+ *       - Auth
+ *     summary: Actualizar perfil del usuario
+ *     description: Actualiza el nombre o email del usuario autenticado
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado exitosamente
+ *       409:
+ *         description: El email ya está en uso
+ *       401:
+ *         description: No autorizado
+ */
+router.put('/me', authMiddleware, updateMeCtrl);
 
 export default router;

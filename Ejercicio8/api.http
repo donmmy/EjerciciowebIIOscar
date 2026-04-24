@@ -1,6 +1,8 @@
 ### Variables
 @baseUrl = http://localhost:3000/api
 @token = TU_TOKEN_AQUI
+@postId = TU_POST_ID_AQUI
+@postSlug = mi-primer-post
 
 ### =====================
 ### AUTH
@@ -13,8 +15,7 @@ Content-Type: application/json
 {
   "name": "Juan Pérez",
   "email": "juan@ejemplo.com",
-  "password": "MiPassword123",
-  "age": 25
+  "password": "MiPassword123"
 }
 
 ### Login
@@ -28,6 +29,66 @@ Content-Type: application/json
 
 ### Obtener usuario actual
 GET {{baseUrl}}/auth/me HTTP/1.1
+Authorization: Bearer {{token}}
+
+### Actualizar perfil del usuario
+PUT {{baseUrl}}/auth/me HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Juan Pérez Actualizado",
+  "email": "juannuevo@ejemplo.com"
+}
+
+### =====================
+### POSTS
+### =====================
+
+### Listar posts publicados (público)
+GET {{baseUrl}}/posts HTTP/1.1
+
+### Obtener post por slug (público)
+GET {{baseUrl}}/posts/{{postSlug}} HTTP/1.1
+
+### Obtener todos mis posts (author/admin)
+GET {{baseUrl}}/posts/my HTTP/1.1
+Authorization: Bearer {{token}}
+
+### Obtener todos los posts (admin)
+GET {{baseUrl}}/posts/admin/all HTTP/1.1
+Authorization: Bearer {{token}}
+
+### Crear post (author/admin)
+POST {{baseUrl}}/posts HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Mi Primer Post",
+  "content": "Este es el contenido de mi primer post en el blog. Debe tener al menos 10 caracteres para ser válido.",
+  "excerpt": "Un breve resumen de mi post",
+  "tags": ["blog", "nodejs", "express"],
+  "featured": "https://ejemplo.com/imagen.jpg"
+}
+
+### Actualizar post (autor/admin)
+PUT {{baseUrl}}/posts/{{postId}} HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Mi Primer Post - Actualizado",
+  "content": "Contenido actualizado del post con más detalles y información",
+  "tags": ["blog", "nodejs", "express", "actualizado"]
+}
+
+### Publicar/Despublicar post (autor/admin)
+PUT {{baseUrl}}/posts/{{postId}}/publish HTTP/1.1
+Authorization: Bearer {{token}}
+
+### Eliminar post (autor/admin)
+DELETE {{baseUrl}}/posts/{{postId}} HTTP/1.1
 Authorization: Bearer {{token}}
 
 ### =====================
@@ -70,7 +131,7 @@ Authorization: Bearer {{token}}
 ### =====================
 
 ### Sin token (401)
-POST {{baseUrl}}/tracks HTTP/1.1
+POST {{baseUrl}}/posts HTTP/1.1
 Content-Type: application/json
 
 {
@@ -80,6 +141,16 @@ Content-Type: application/json
 ### Token inválido (401)
 GET {{baseUrl}}/auth/me HTTP/1.1
 Authorization: Bearer token_invalido
+
+### User intenta crear post (403 - necesita ser author)
+POST {{baseUrl}}/posts HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Post sin permisos",
+  "content": "User normal no puede crear posts"
+}
 
 ### Validación fallida (400)
 POST {{baseUrl}}/auth/register HTTP/1.1

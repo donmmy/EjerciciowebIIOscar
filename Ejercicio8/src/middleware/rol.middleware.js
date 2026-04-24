@@ -1,10 +1,11 @@
 import { handleHttpError } from '../utils/handleError.js';
 
-const checkRol = (rolRequerido) => (req, res, next) => {
+const checkRol = (rolesRequeridos) => (req, res, next) => {
   try {
     const { user } = req;
+    const rolesArray = Array.isArray(rolesRequeridos) ? rolesRequeridos : [rolesRequeridos];
 
-    if (user.role !== rolRequerido) {
+    if (!rolesArray.includes(user.role)) {
       return handleHttpError(res, 'NOT_ALLOWED', 403);
     }
 

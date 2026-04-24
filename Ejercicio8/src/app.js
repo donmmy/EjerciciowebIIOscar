@@ -7,6 +7,7 @@ import routes from './routes/index.js';
 import swaggerSpecs from './docs/swagger.js';
 import { loggerStream } from './utils/handleLogger.js';
 import { notFound, errorHandler } from './middleware/error.middleware.js';
+import { env } from './config/env.js';
 
 const app = express();
 
@@ -44,6 +45,33 @@ dbConnect().then(() => {
     console.log(`🚀 Servidor en http://localhost:${PORT}`);
     console.log(`📚 Docs en http://localhost:${PORT}/api-docs`);
   });
+});
+
+// src/app.js
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Configurar según entorno
+if (isProduction) {
+  // Menos logs
+  app.use(morgan('combined'));
+} else {
+  // Más verbose
+  app.use(morgan('dev'));
+}
+
+// Error handler diferente
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  res.status(err.status || 500).json({
+    error: true,
+    message: isProduction ? 'Error interno' : err.message,
+    ...(isProduction ? {} : { stack: err.stack })
+  });
+});
+
+app.listen(env.PORT, () => {
+  console.log(`Servidor en puerto ${env.PORT} [${env.NODE_ENV}]`);
 });
 
 export default app;

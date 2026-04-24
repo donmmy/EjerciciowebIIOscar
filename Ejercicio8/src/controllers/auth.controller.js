@@ -66,3 +66,25 @@ export const getMeCtrl = async (req, res) => {
     handleHttpError(res, 'ERROR_GET_ME');
   }
 };
+
+// PUT /api/auth/me — actualizar perfil del usuario actual
+export const updateMeCtrl = async (req, res) => {
+  try {
+    const { name, email } = req.body;
+    const updates = {};
+
+    if (name) updates.name = name;
+    if (email) {
+      const existingUser = await User.findOne({ email, _id: { $ne: req.user._id } });
+      if (existingUser) {
+        return handleHttpError(res, 'EMAIL_ALREADY_EXISTS', 409);
+      }
+      updates.email = email;
+    }
+
+    const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
+    res.json({ data: user });
+  } catch (err) {
+    handleHttpError(res, 'ERROR_UPDATE_ME');
+  }
+};

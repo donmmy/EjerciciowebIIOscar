@@ -94,4 +94,56 @@ describe('Auth Endpoints', () => {
         .expect(401);
     });
   });
+
+  describe('PUT /api/auth/me', () => {
+    // ✓ PUT /api/auth/me → 200 actualizar perfil
+    it('debería actualizar el nombre del usuario (200)', async () => {
+      const res = await request(app)
+        .put('/api/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ name: 'Updated Name' })
+        .expect(200);
+
+      expect(res.body.data.name).toBe('Updated Name');
+    });
+
+    // ✓ PUT /api/auth/me → 200 actualizar email
+    it('debería actualizar el email del usuario (200)', async () => {
+      const newEmail = `updated_${Date.now()}@example.com`;
+      const res = await request(app)
+        .put('/api/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ email: newEmail })
+        .expect(200);
+
+      expect(res.body.data.email).toBe(newEmail);
+    });
+
+    // ✓ PUT /api/auth/me → 409 si email ya existe
+    it('debería rechazar si email ya existe (409)', async () => {
+      // Crear otro usuario
+      const otherUser = await request(app)
+        .post('/api/auth/register')
+        .send({
+          name: 'Other User',
+          email: `other_${Date.now()}@example.com`,
+          password: 'OtherPassword123'
+        });
+
+      // Intentar usar el email del otro usuario
+      await request(app)
+        .put('/api/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ email: otherUser.body.user.email })
+        .expect(409);
+    });
+
+    // ✓ PUT /api/auth/me → 401 sin token
+    it('debería rechazar sin token (401)', async () => {
+      await request(app)
+        .put('/api/auth/me')
+        .send({ name: 'Unauthorized Update' })
+        .expect(401);
+    });
+  });
 });
