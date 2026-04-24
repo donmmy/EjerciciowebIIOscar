@@ -12,3 +12,13 @@ docker-compose*.yml
 coverage
 .nyc_output
 tests
+jest.config.js
+.vscode
+.idea
+.DS_Store
+dist
+build
+storage
+uploads
+.next
+out
