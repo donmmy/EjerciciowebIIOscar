@@ -30,6 +30,19 @@ export const shortTokenSign = (user) => {
   return sign;
 };
 
+export const tokenSign = (user) => {
+  const sign = jwt.sign(
+    {
+      userId: user._id
+    },
+    JWT_SECRET,
+    {
+      expiresIn: JWT_SHORT_EXPIRES_IN
+    }
+  );
+  return sign;
+};
+
 export const verifyToken = (tokenJwt) => {
   try {
     return jwt.verify(tokenJwt, JWT_SECRET);

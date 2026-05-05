@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
-import userRoutes from './routes/user.routes.js';
+import routes from './routes/index.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import { generalLimiter, authLimiter } from './middleware/rateLimit.middleware.js';
 
@@ -26,7 +26,7 @@ app.use(mongoSanitize());
 app.use('/uploads', express.static('uploads'));
 
 // Rutas
-app.use('/api/user', userRoutes);
+app.use('/api', routes);
 
 // Middleware de error
 app.use(errorMiddleware);

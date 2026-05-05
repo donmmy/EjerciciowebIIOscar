@@ -102,4 +102,4 @@ clientSchema.index({ cif: 1 }, { unique: true });
 
 clientSchema.plugin(softDeletePlugin);
 
-export const Client = mongoose.model("Client", clientSchema);
+export default mongoose.model("Client", clientSchema);
