@@ -1,0 +1,83 @@
+### Variables
+@baseUrl = http://localhost:3000/api
+@authToken = Bearer YOUR_JWT_TOKEN_HERE
+@projectId = PROJECT_ID_HERE
+@clientId = CLIENT_ID_HERE
+
+### 1. Crear un proyecto
+POST {{baseUrl}}/project
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "name": "Reforma Casa Central",
+  "projectCode": "REF-2024-001",
+  "description": "Reforma integral de la casa central de la compañía",
+  "client": "{{clientId}}",
+  "status": "activo",
+  "budget": 50000,
+  "startDate": "2024-01-15T00:00:00Z",
+  "endDate": "2024-06-30T00:00:00Z",
+  "address": {
+    "street": "Calle Principal",
+    "number": "42",
+    "postal": "28001",
+    "city": "Madrid",
+    "province": "Madrid"
+  }
+}
+
+### 2. Listar todos los proyectos
+GET {{baseUrl}}/project?page=1&limit=10
+Authorization: {{authToken}}
+
+### 3. Listar proyectos con filtro por nombre
+GET {{baseUrl}}/project?name=Reforma&page=1&limit=10
+Authorization: {{authToken}}
+
+### 4. Listar proyectos con filtro por cliente
+GET {{baseUrl}}/project?client={{clientId}}&page=1&limit=10
+Authorization: {{authToken}}
+
+### 5. Listar proyectos con filtro por estado
+GET {{baseUrl}}/project?status=activo&page=1&limit=10
+Authorization: {{authToken}}
+
+### 6. Listar proyectos activos
+GET {{baseUrl}}/project?active=true&page=1&limit=10
+Authorization: {{authToken}}
+
+### 7. Listar proyectos ordenados por fecha de creación descendente
+GET {{baseUrl}}/project?sort=-createdAt&page=1&limit=10
+Authorization: {{authToken}}
+
+### 8. Obtener un proyecto específico
+GET {{baseUrl}}/project/{{projectId}}
+Authorization: {{authToken}}
+
+### 9. Actualizar un proyecto
+PUT {{baseUrl}}/project/{{projectId}}
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+  "name": "Reforma Casa Central - Fase 2",
+  "status": "completado",
+  "endDate": "2024-05-15T00:00:00Z"
+}
+
+### 10. Soft delete (archivar) un proyecto
+DELETE {{baseUrl}}/project/{{projectId}}?soft=true
+Authorization: {{authToken}}
+
+### 11. Hard delete (eliminar permanentemente) un proyecto
+DELETE {{baseUrl}}/project/{{projectId}}?soft=false
+Authorization: {{authToken}}
+
+### 12. Listar proyectos archivados
+GET {{baseUrl}}/project/archived?page=1&limit=10
+Authorization: {{authToken}}
+
+### 13. Restaurar un proyecto archivado
+PATCH {{baseUrl}}/project/{{projectId}}/restore
+Authorization: {{authToken}}

@@ -11,7 +11,7 @@ const router = express.Router();
  */
 router.use('/user', userRoutes);
 router.use('/client', clientRoutes);
-router.use('/proyecto', proyectoRoutes);
+router.use('/project', proyectoRoutes);
 router.use('/albaranes', albaranesRoutes);
 
 export default router;
