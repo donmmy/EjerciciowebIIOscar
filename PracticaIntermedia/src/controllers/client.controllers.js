@@ -36,6 +36,14 @@ export const createClient = async (req, res, next) => {
             phone,
             address
         });
+
+        // Emitir evento a la compañía
+        const io = req.app.get('io');
+        io.to(companyId.toString()).emit('client:new', {
+            id: newClient._id,
+            name: newClient.name,
+            cif: newClient.cif
+        });
         
         res.status(201).json(newClient);
     } catch (error) {

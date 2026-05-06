@@ -54,6 +54,15 @@ export const createProyecto = async (req, res, next) => {
         // Populate client info
         await newProyecto.populate('client');
 
+        // Emitir evento a la compañía
+        const io = req.app.get('io');
+        io.to(companyId.toString()).emit('project:new', {
+            id: newProyecto._id,
+            name: newProyecto.name,
+            projectCode: newProyecto.projectCode,
+            client: newProyecto.client?.name
+        });
+
         res.status(201).json(newProyecto);
     } catch (error) {
         next(error);

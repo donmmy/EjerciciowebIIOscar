@@ -7,7 +7,7 @@ if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: '.env' });
 }
 
-import app from './app.js';
+import { app, httpServer } from './app.js';
 import dbConnect from './config/db.js';
 
 const PORT = process.env.PORT || 3000;
@@ -21,7 +21,7 @@ const startServer = async () => {
 
     // Iniciar servidor (solo si no es test)
     if (process.env.NODE_ENV !== 'test') {
-      app.listen(PORT, () => {
+      httpServer.listen(PORT, () => {
         console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
         console.log(`📚 Documentación en http://localhost:${PORT}/api-docs`);
       });
@@ -35,3 +35,4 @@ const startServer = async () => {
 startServer();
 
 export default app;
+

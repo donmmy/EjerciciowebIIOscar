@@ -43,6 +43,15 @@ export const createDeliverNote = async (req, res, next) => {
             hours,
             workers
         });
+
+        // Emitir evento a la compañía
+        const io = req.app.get('io');
+        io.to(companyId.toString()).emit('deliverynote:new', {
+            id: newDeliverNote._id,
+            description: newDeliverNote.description,
+            client: project.client,
+            project: projectId
+        });
         
         res.status(201).json(newDeliverNote);
     } catch (error) {
@@ -346,6 +355,14 @@ export const signDeliverNote = async (req, res, next) => {
         }
 
         await deliverNote.save();
+
+        // Emitir evento a la compañía
+        const io = req.app.get('io');
+        io.to(companyId.toString()).emit('deliverynote:signed', {
+            id: deliverNote._id,
+            signedAt: deliverNote.signedAt,
+            pdfUrl: deliverNote.pdfUrl
+        });
 
         res.json({
             message: 'Albarán firmado correctamente',
