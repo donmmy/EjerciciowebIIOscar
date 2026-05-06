@@ -1,8 +1,14 @@
+### Project Endpoints Testing File
+
 ### Variables
 @baseUrl = http://localhost:3000/api
 @authToken = Bearer YOUR_JWT_TOKEN_HERE
 @projectId = PROJECT_ID_HERE
 @clientId = CLIENT_ID_HERE
+
+---
+
+## PROJECT CRUD
 
 ### 1. Crear un proyecto
 POST {{baseUrl}}/project
@@ -66,11 +72,11 @@ Authorization: {{authToken}}
   "endDate": "2024-05-15T00:00:00Z"
 }
 
-### 10. Soft delete (archivar) un proyecto
+### 10. Archivar proyecto (soft delete)
 DELETE {{baseUrl}}/project/{{projectId}}?soft=true
 Authorization: {{authToken}}
 
-### 11. Hard delete (eliminar permanentemente) un proyecto
+### 11. Eliminar proyecto permanentemente (hard delete)
 DELETE {{baseUrl}}/project/{{projectId}}?soft=false
 Authorization: {{authToken}}
 
@@ -78,6 +84,6 @@ Authorization: {{authToken}}
 GET {{baseUrl}}/project/archived?page=1&limit=10
 Authorization: {{authToken}}
 
-### 13. Restaurar un proyecto archivado
+### 13. Restaurar proyecto archivado
 PATCH {{baseUrl}}/project/{{projectId}}/restore
 Authorization: {{authToken}}

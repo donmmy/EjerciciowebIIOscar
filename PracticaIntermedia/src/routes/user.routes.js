@@ -14,7 +14,7 @@ import {
     deleteUser,
     changePassword
 } from '../controllers/user.controller.js';
-import { authMiddleware } from '../middleware/session.middleware.js';
+import authMiddleware from '../middleware/session.middleware.js';
 import { validateRequest } from '../middleware/validate.middleware.js';
 import { validateCodeValidator, loginValidator, userValidator, basicRegisterValidator, userCompanyValidator, newPasswordValidator } from '../validators/user.validator.js';
 import { uploadMiddleware } from '../middleware/upload.middleware.js';

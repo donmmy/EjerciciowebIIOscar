@@ -18,7 +18,7 @@
 }*/
 
 import mongoose from "mongoose";
-import { softDeletePlugin } from "../plugins/softDelete.plugin";
+import { softDeletePlugin } from "../plugins/softDelete.plugin.js";
 
 
 

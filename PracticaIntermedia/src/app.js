@@ -1,7 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import mongoSanitize from 'express-mongo-sanitize';
+import swaggerUi from 'swagger-ui-express';
+import { specs } from './config/swagger.js';
 import routes from './routes/index.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import { generalLimiter, authLimiter } from './middleware/rateLimit.middleware.js';
@@ -19,11 +20,19 @@ app.use(generalLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Sanitización de datos contra inyección NoSQL
-app.use(mongoSanitize());
-
 // Servir archivos estáticos (uploads)
 app.use('/uploads', express.static('uploads'));
+
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { 
+  swaggerOptions: { url: '/api-docs.json' } 
+}));
+
+// Endpoint para obtener spec JSON
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(specs);
+});
 
 // Rutas
 app.use('/api', routes);

@@ -157,7 +157,7 @@ export const updateClient = async (req, res, next) => {
 export const deleteClient = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { soft = 'true' } = req.query;
+        const { soft } = req.query;
         const userId = req.user._id;
         const companyId = req.user.company;
 
@@ -171,13 +171,12 @@ export const deleteClient = async (req, res, next) => {
             throw AppError.notFound("Cliente no encontrado");
         }
 
-        if (soft === 'true') {
+        if (soft) {
             // Soft delete
-            deletedClient.deleted = true;
-            await deletedClient.save();
+            await deletedClient.softDelete(id);
         } else {
             // Hard delete
-            await Client.deleteOne({ _id: id });
+            await deletedClient.hardDeleteById(id);
         }
 
         res.status(200).json({ 
@@ -237,10 +236,7 @@ export const restoreClient = async (req, res, next) => {
         if (!archivedClient) {
             throw AppError.notFound("Cliente archivado no encontrado");
         }
-
-        archivedClient.deleted = false;
-        await archivedClient.save();
-
+        await archivedClient.restore();
         res.status(200).json({
             message: "Cliente restaurado correctamente",
             data: archivedClient

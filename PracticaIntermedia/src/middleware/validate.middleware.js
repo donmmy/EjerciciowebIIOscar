@@ -7,15 +7,25 @@ export const validateRequest = (schema) => (req, res, next) => {
     });
     next();
   } catch (error) {
-    const errors = error.errors.map(e => ({
-      field: e.path.join('.'),
-      message: e.message
-    }));
+    // Manejar errores de Zod
+    if (error.errors && Array.isArray(error.errors)) {
+      const errors = error.errors.map(e => ({
+        field: e.path.join('.'),
+        message: e.message
+      }));
 
-    res.status(400).json({
+      return res.status(400).json({
+        error: true,
+        message: 'Error de validación',
+        details: errors
+      });
+    }
+
+    // Manejar otros errores
+    return res.status(400).json({
       error: true,
-      message: 'Error de validación',
-      details: errors
+      message: error.message || 'Error de validación',
+      details: []
     });
   }
 };

@@ -238,13 +238,12 @@ export const deleteProyecto = async (req, res, next) => {
             throw AppError.notFound("Proyecto no encontrado");
         }
 
-        if (soft === 'true') {
+        if (soft) {
             // Soft delete
-            deletedProyecto.deleted = true;
-            await deletedProyecto.save();
+            await deletedProyecto.softDeleteById(id);
         } else {
             // Hard delete
-            await Proyecto.deleteOne({ _id: id });
+            await deletedProyecto.hardDeleteById(id);
         }
 
         res.status(200).json({

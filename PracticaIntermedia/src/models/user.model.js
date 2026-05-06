@@ -25,7 +25,7 @@
 // fullName → name + ' ' + lastName*/
 
 import mongoose from "mongoose";
-import { softDeletePlugin } from "../plugins/softDelete.plugin";
+import { softDeletePlugin } from "../plugins/softDelete.plugin.js";
 
 const userSchema = new mongoose.Schema(
     {
@@ -96,10 +96,6 @@ const userSchema = new mongoose.Schema(
             city: String,
             province: String
         },
-        softDelete: {
-            type: Boolean,
-            default: false
-        },
         createdAt: Date,
         updatedAt: Date
     },
@@ -111,9 +107,6 @@ const userSchema = new mongoose.Schema(
 )
 
 // Índices de consulta frecuente optimizados
-// Índice único en email para búsquedas rápidas y prevención de duplicados
-userSchema.index({ email: 1 }, { unique: true, sparse: true });
-
 // Índice en status para filtrar usuarios verificados/pendientes
 userSchema.index({ status: 1 });
 

@@ -8,7 +8,7 @@ import {
     getArchivedClients,
     restoreClient
 } from '../controllers/client.controllers.js';
-import { authMiddleware } from '../middleware/session.middleware.js';
+import authMiddleware from '../middleware/session.middleware.js';
 import { validateRequest } from '../middleware/validate.middleware.js';
 import { clientValidator, clientUpdateValidator } from '../validators/client.validator.js';
 

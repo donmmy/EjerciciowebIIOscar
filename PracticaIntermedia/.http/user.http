@@ -1,0 +1,129 @@
+### User Endpoints Testing File
+
+### Variables
+@baseUrl = http://localhost:3000/api
+@registerEmail = test@example.com
+@registerPassword = Password123456
+@registerName = John
+@registerLastName = Doe
+@registerNif = 12345678A
+@authToken = Bearer YOUR_JWT_TOKEN_HERE
+@refreshToken = YOUR_REFRESH_TOKEN_HERE
+
+---
+
+## AUTHENTICATION (No requieren JWT)
+
+### 1. Registrarse - POST /api/user/register
+POST {{baseUrl}}/user/register
+Content-Type: application/json
+
+{
+  "email": "{{registerEmail}}",
+  "password": "{{registerPassword}}",
+  "name": "{{registerName}}",
+  "lastName": "{{registerLastName}}",
+  "nif": "{{registerNif}}",
+  "role": "admin"
+}
+
+### 2. Login - POST /api/user/login
+POST {{baseUrl}}/user/login
+Content-Type: application/json
+
+{
+  "email": "{{registerEmail}}",
+  "password": "{{registerPassword}}"
+}
+
+### 3. Validar Email con código - PUT /api/user/validation
+PUT {{baseUrl}}/user/validation
+Authorization: {{authToken}}
+Content-Type: application/json
+
+{
+  "code": "123456"
+}
+
+### 4. Refrescar token - POST /api/user/refresh
+POST {{baseUrl}}/user/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### 5. Logout - POST /api/user/logout
+POST {{baseUrl}}/user/logout
+Authorization: {{authToken}}
+
+---
+
+## USER PROFILE (Requieren JWT)
+
+### 6. Obtener usuario autenticado - GET /api/user
+GET {{baseUrl}}/user
+Authorization: {{authToken}}
+
+### 7. Actualizar datos personales - PUT /api/user/register
+PUT {{baseUrl}}/user/register
+Authorization: {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "John",
+  "lastName": "Doe",
+  "nif": "12345678A"
+}
+
+### 8. Asignar/actualizar compañía - PATCH /api/user/company
+PATCH {{baseUrl}}/user/company
+Authorization: {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Mi Empresa S.L.",
+  "cif": "A12345678",
+  "address": {
+    "street": "Calle Principal",
+    "number": "42",
+    "postal": "28001",
+    "city": "Madrid",
+    "province": "Madrid"
+  },
+  "isFreelance": false
+}
+
+### 9. Subir logo de compañía - PATCH /api/user/logo
+PATCH {{baseUrl}}/user/logo
+Authorization: {{authToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="logo"; filename="logo.png"
+Content-Type: image/png
+
+< ./uploads/logo.png
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 10. Cambiar contraseña - POST /api/user/change-password
+POST {{baseUrl}}/user/change-password
+Authorization: {{authToken}}
+Content-Type: application/json
+
+{
+  "currentPassword": "{{registerPassword}}",
+  "newPassword": "NewPassword123456"
+}
+
+### 11. Eliminar usuario - DELETE /api/user
+DELETE {{baseUrl}}/user
+Authorization: {{authToken}}
+
+### 12. Listar usuarios (admin) - GET /api/user/list
+GET {{baseUrl}}/user/list?page=1&limit=10
+Authorization: {{authToken}}
+
+### 13. Obtener usuario por ID - GET /api/user/:id
+GET {{baseUrl}}/user/507f1f77bcf86cd799439011
+Authorization: {{authToken}}

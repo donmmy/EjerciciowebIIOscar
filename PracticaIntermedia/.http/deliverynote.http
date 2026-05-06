@@ -1,0 +1,106 @@
+### DeliveryNote Endpoints Testing File
+
+### Variables
+@baseUrl = http://localhost:3000/api
+@authToken = Bearer YOUR_JWT_TOKEN_HERE
+@projectId = PROJECT_ID_HERE
+@deliveryNoteId = DELIVERY_NOTE_ID_HERE
+@clientId = CLIENT_ID_HERE
+
+---
+
+## DELIVERY NOTES CRUD
+
+### 1. Crear albarán de horas - POST /api/deliverynote
+POST {{baseUrl}}/deliverynote
+Authorization: {{authToken}}
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "description": "Trabajo realizado en obra",
+  "date": "2024-05-15T10:30:00Z",
+  "format": "hours",
+  "hours": 8,
+  "workers": [
+    {
+      "name": "Juan García",
+      "hours": 4
+    },
+    {
+      "name": "María López",
+      "hours": 4
+    }
+  ]
+}
+
+### 2. Crear albarán de material - POST /api/deliverynote
+POST {{baseUrl}}/deliverynote
+Authorization: {{authToken}}
+Content-Type: application/json
+
+{
+  "projectId": "{{projectId}}",
+  "description": "Entrega de materiales",
+  "date": "2024-05-15T14:00:00Z",
+  "format": "material",
+  "material": "Cemento Portland 42.5",
+  "quantity": 50,
+  "unit": "sacos"
+}
+
+### 3. Listar albaranes - GET /api/deliverynote
+GET {{baseUrl}}/deliverynote?page=1&limit=10
+Authorization: {{authToken}}
+
+### 4. Listar albaranes con filtro por proyecto
+GET {{baseUrl}}/deliverynote?page=1&limit=10&project={{projectId}}
+Authorization: {{authToken}}
+
+### 5. Listar albaranes con filtro por cliente
+GET {{baseUrl}}/deliverynote?page=1&limit=10&client={{clientId}}
+Authorization: {{authToken}}
+
+### 6. Listar albaranes con filtro por formato
+GET {{baseUrl}}/deliverynote?page=1&limit=10&format=hours
+Authorization: {{authToken}}
+
+### 7. Listar solo albaranes firmados
+GET {{baseUrl}}/deliverynote?page=1&limit=10&signed=true
+Authorization: {{authToken}}
+
+### 8. Listar albaranes por rango de fechas
+GET {{baseUrl}}/deliverynote?page=1&limit=10&from=2024-01-01&to=2024-12-31
+Authorization: {{authToken}}
+
+### 9. Listar albaranes ordenados por fecha descendente
+GET {{baseUrl}}/deliverynote?page=1&limit=10&sort=-workDate
+Authorization: {{authToken}}
+
+### 10. Obtener albarán específico - GET /api/deliverynote/:id
+GET {{baseUrl}}/deliverynote/{{deliveryNoteId}}
+Authorization: {{authToken}}
+
+### 11. Descargar albarán en PDF - GET /api/deliverynote/pdf/:id
+GET {{baseUrl}}/deliverynote/pdf/{{deliveryNoteId}}
+Authorization: {{authToken}}
+
+### 12. Firmar albarán - PATCH /api/deliverynote/:id/sign
+PATCH {{baseUrl}}/deliverynote/{{deliveryNoteId}}/sign
+Authorization: {{authToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="signature"; filename="firma.png"
+Content-Type: image/png
+
+< ./uploads/firma.png
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 13. Archivar albarán (soft delete) - DELETE /api/deliverynote/:id
+DELETE {{baseUrl}}/deliverynote/{{deliveryNoteId}}?soft=true
+Authorization: {{authToken}}
+
+### 14. Eliminar albarán permanentemente (hard delete) - DELETE /api/deliverynote/:id
+DELETE {{baseUrl}}/deliverynote/{{deliveryNoteId}}?soft=false
+Authorization: {{authToken}}

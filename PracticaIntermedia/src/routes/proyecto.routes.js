@@ -8,7 +8,7 @@ import {
     getArchivedProyectos,
     restoreProyecto
 } from '../controllers/proyecto.controller.js';
-import { authMiddleware } from '../middleware/session.middleware.js';
+import authMiddleware from '../middleware/session.middleware.js';
 import { validateRequest } from '../middleware/validate.middleware.js';
 import { proyectoValidator, proyectoUpdateValidator } from '../validators/proyecto.validator.js';
 

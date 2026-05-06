@@ -1,0 +1,82 @@
+### Client Endpoints Testing File
+
+### Variables
+@baseUrl = http://localhost:3000/api
+@authToken = Bearer YOUR_JWT_TOKEN_HERE
+@clientId = CLIENT_ID_HERE
+@clientName = Empresa XYZ S.L.
+@clientCif = A87654321
+
+---
+
+## CLIENT CRUD
+
+### 1. Crear cliente - POST /api/client
+POST {{baseUrl}}/client
+Authorization: {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "{{clientName}}",
+  "cif": "{{clientCif}}",
+  "email": "contacto@empresaxyz.com",
+  "phone": "+34912345678",
+  "address": {
+    "street": "Avenida Tecnológica",
+    "number": "123",
+    "postal": "28050",
+    "city": "Madrid",
+    "province": "Madrid"
+  }
+}
+
+### 2. Listar clientes - GET /api/client
+GET {{baseUrl}}/client?page=1&limit=10
+Authorization: {{authToken}}
+
+### 3. Listar clientes con filtro por nombre
+GET {{baseUrl}}/client?page=1&limit=10&name=Empresa
+Authorization: {{authToken}}
+
+### 4. Listar clientes con ordenamiento
+GET {{baseUrl}}/client?page=1&limit=10&sort=createdAt
+Authorization: {{authToken}}
+
+### 5. Obtener cliente específico - GET /api/client/:id
+GET {{baseUrl}}/client/{{clientId}}
+Authorization: {{authToken}}
+
+### 6. Actualizar cliente - PUT /api/client/:id
+PUT {{baseUrl}}/client/{{clientId}}
+Authorization: {{authToken}}
+Content-Type: application/json
+
+{
+  "name": "Empresa XYZ Actualizada",
+  "cif": "A87654321",
+  "email": "nuevo@empresaxyz.com",
+  "phone": "+34912345679",
+  "address": {
+    "street": "Avenida Nueva",
+    "number": "456",
+    "postal": "28051",
+    "city": "Madrid",
+    "province": "Madrid"
+  }
+}
+
+### 7. Archivar cliente (soft delete) - DELETE /api/client/:id
+DELETE {{baseUrl}}/client/{{clientId}}?soft=true
+Authorization: {{authToken}}
+
+### 8. Eliminar cliente (hard delete) - DELETE /api/client/:id
+DELETE {{baseUrl}}/client/{{clientId}}?soft=false
+Authorization: {{authToken}}
+
+### 9. Listar clientes archivados - GET /api/client/archived
+GET {{baseUrl}}/client/archived?page=1&limit=10
+Authorization: {{authToken}}
+
+### 10. Restaurar cliente archivado - PATCH /api/client/:id/restore
+PATCH {{baseUrl}}/client/{{clientId}}/restore
+Authorization: {{authToken}}

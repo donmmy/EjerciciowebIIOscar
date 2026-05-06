@@ -7,7 +7,7 @@ import {
     signDeliverNote,
     deleteDeliverNote
 } from '../controllers/albaranes.controller.js';
-import { authMiddleware } from '../middleware/session.middleware.js';
+import authMiddleware from '../middleware/session.middleware.js';
 import { validateRequest } from '../middleware/validate.middleware.js';
 import { deliverNoteValidator } from '../validators/deliverNote.validator.js';
 import { uploadMiddleware } from '../middleware/upload.middleware.js';

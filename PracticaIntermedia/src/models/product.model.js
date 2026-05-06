@@ -21,7 +21,7 @@
 }
 */
 import mongoose from "mongoose";
-import { softDeletePlugin } from "../plugins/softDelete.plugin";
+import { softDeletePlugin } from "../plugins/softDelete.plugin.js";
 
 const productSchema = new mongoose.Schema(
     {
