@@ -97,12 +97,18 @@ const deliverNoteSchema = new mongoose.Schema(
         signedAt: {
             type: Date
         },
-    signatureUrl: String,    // URL de la imagen de firma (Cloudinary/R2)
-    pdfUrl: String,          // URL del PDF firmado en la nube
-    deleted: Boolean,        // Soft delete
-    createdAt: Date,
-    updatedAt: Date
-});
+        signatureUrl: String,    // URL de la imagen de firma (Cloudinary/R2)
+        pdfUrl: String,          // URL del PDF firmado en la nube
+        deleted: {
+            type: Boolean,
+            default: false
+        }
+    },
+    {
+        timestamps: true
+    }
+);
 
+deliverNoteSchema.plugin(softDeletePlugin);
 
-export const DeliverNote = mongoose.model("DeliverNote", deliverNoteSchema);
+export default mongoose.model("DeliverNote", deliverNoteSchema);

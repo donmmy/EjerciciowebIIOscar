@@ -2,7 +2,7 @@ import express from 'express';
 import userRoutes from './user.routes.js';
 import clientRoutes from './client.routes.js';
 import proyectoRoutes from './proyecto.routes.js';
-import albaranesRoutes from './albaranes.routes.js';
+import deliveryNoteRoutes from './albaranes.routes.js';
 
 const router = express.Router();
 
@@ -12,6 +12,6 @@ const router = express.Router();
 router.use('/user', userRoutes);
 router.use('/client', clientRoutes);
 router.use('/project', proyectoRoutes);
-router.use('/albaranes', albaranesRoutes);
+router.use('/deliverynote', deliveryNoteRoutes);
 
 export default router;
