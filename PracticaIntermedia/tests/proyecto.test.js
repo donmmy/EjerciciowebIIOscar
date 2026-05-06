@@ -89,7 +89,7 @@ describe('Project Endpoints', () => {
           budget: 5000
         });
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(response.body.name).toBe('Test Project');
       expect(response.body.projectCode).toBe('PRJ-001');
     });

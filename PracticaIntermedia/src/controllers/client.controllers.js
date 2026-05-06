@@ -171,12 +171,12 @@ export const deleteClient = async (req, res, next) => {
             throw AppError.notFound("Cliente no encontrado");
         }
 
-        if (soft) {
-            // Soft delete
-            await deletedClient.softDelete(id);
+        if (soft !== 'false') {
+            // Soft delete (predeterminado)
+            await deletedClient.softDelete();
         } else {
             // Hard delete
-            await deletedClient.hardDeleteById(id);
+            await Client.hardDelete(id);
         }
 
         res.status(200).json({ 

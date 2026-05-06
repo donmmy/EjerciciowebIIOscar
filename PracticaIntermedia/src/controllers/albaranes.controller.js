@@ -9,6 +9,7 @@ import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import { generateDeliverNotePDF, uploadPDFToCloud, downloadFromCloud } from '../utils/handlePDF.js';
+import { uploadToCloudinary, uploadFileToCloudinary } from '../utils/handleUpload.js';
 
 // POST /api/albaranes
 export const createDeliverNote = async (req, res, next) => {
@@ -320,29 +321,28 @@ export const signDeliverNote = async (req, res, next) => {
             throw AppError.badRequest('Este albarán ya está firmado y no puede modificarse');
         }
 
-        // TODO: Subir imagen de firma a Cloudinary o Cloudflare R2
-        // Aquí iría la lógica de subida a la nube
-        // const signatureUrl = await uploadToCloudinary(req.file);
-        // Por ahora usamos la ruta local
-        const signatureUrl = `/uploads/${req.file.filename}`;
+        // Optimizar y subir firma a Cloudinary
+        const signatureResult = await uploadToCloudinary(req.file.buffer, { 
+            width: 800, 
+            folder: 'signatures' 
+        });
+        const signatureUrl = signatureResult.secure_url;
 
         // Actualizar albarán con datos de firma
         deliverNote.signed = true;
         deliverNote.signedAt = new Date();
         deliverNote.signatureUrl = signatureUrl;
 
-        // Generar PDF firmado
+        // Generar PDF firmado y subirlo
         try {
             const pdfBuffer = await generateDeliverNotePDF(deliverNote);
-            
-            // TODO: Subir PDF a la nube
-            // const pdfUrl = await uploadPDFToCloud(pdfBuffer, `albarán_${deliverNote._id}.pdf`);
-            // deliverNote.pdfUrl = pdfUrl;
-            
-            // Por ahora no se sube a la nube, se genera bajo demanda
+            const pdfResult = await uploadFileToCloudinary(pdfBuffer, {
+                folder: 'delivery_notes',
+                filename: `albaran_${deliverNote._id}`
+            });
+            deliverNote.pdfUrl = pdfResult.secure_url;
         } catch (pdfError) {
-            console.error('Error generando PDF:', pdfError);
-            // No es crítico si falla la generación del PDF en este punto
+            console.error('Error generando/subiendo PDF:', pdfError);
         }
 
         await deliverNote.save();
@@ -352,17 +352,6 @@ export const signDeliverNote = async (req, res, next) => {
             data: deliverNote
         });
     } catch (error) {
-        // Eliminar archivo cargado si hay error
-        if (req.file) {
-            const filePath = path.join(
-                path.dirname(new URL(import.meta.url).pathname),
-                '../../uploads',
-                req.file.filename
-            );
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-            }
-        }
         next(error);
     }
 };

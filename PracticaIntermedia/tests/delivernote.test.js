@@ -96,16 +96,16 @@ describe('DeliveryNote Endpoints', () => {
         .post('/api/deliverynote')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          project: projectId,
+          projectId: projectId,
           description: 'Material delivery',
           format: 'material',
-          workDate: new Date().toISOString(),
+          date: new Date().toISOString(),
           material: 'Cement',
           quantity: 100,
           unit: 'kg'
         });
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(response.body.format).toBe('material');
       expect(response.body.material).toBe('Cement');
     });
@@ -115,17 +115,17 @@ describe('DeliveryNote Endpoints', () => {
         .post('/api/deliverynote')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          project: projectId,
+          projectId: projectId,
           description: 'Work hours',
           format: 'hours',
-          workDate: new Date().toISOString(),
+          date: new Date().toISOString(),
           hours: 8,
           workers: [
             { name: 'Worker 1', hours: 8 }
           ]
         });
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(response.body.format).toBe('hours');
       expect(response.body.workers.length).toBe(1);
     });
@@ -150,10 +150,10 @@ describe('DeliveryNote Endpoints', () => {
         .post('/api/deliverynote')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          project: projectId,
+          projectId: projectId,
           description: 'Delivery 1',
           format: 'material',
-          workDate: new Date().toISOString(),
+          date: new Date().toISOString(),
           material: 'Cement',
           quantity: 100,
           unit: 'kg'
@@ -163,10 +163,10 @@ describe('DeliveryNote Endpoints', () => {
         .post('/api/deliverynote')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          project: projectId,
+          projectId: projectId,
           description: 'Delivery 2',
           format: 'hours',
-          workDate: new Date().toISOString(),
+          date: new Date().toISOString(),
           hours: 8,
           workers: [{ name: 'Worker 1', hours: 8 }]
         });
@@ -200,10 +200,10 @@ describe('DeliveryNote Endpoints', () => {
         .post('/api/deliverynote')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          project: projectId,
+          projectId: projectId,
           description: 'PDF Test',
           format: 'material',
-          workDate: new Date().toISOString(),
+          date: new Date().toISOString(),
           material: 'Cement',
           quantity: 100,
           unit: 'kg'

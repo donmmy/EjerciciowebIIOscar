@@ -41,7 +41,7 @@ describe('Auth Endpoints', () => {
           role: 'admin'
         });
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('accessToken');
       expect(response.body).toHaveProperty('refreshToken');
       expect(response.body.user).toBeDefined();
@@ -74,7 +74,7 @@ describe('Auth Endpoints', () => {
         });
 
       expect(response.status).toBe(409);
-      expect(response.body.message).toContain('existe');
+      expect(response.body.message).toContain('registrado');
     });
 
     it('should fail with invalid email format', async () => {
@@ -154,7 +154,7 @@ describe('Auth Endpoints', () => {
           password: 'Password123456'
         });
 
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(404);
     });
   });
 

@@ -80,7 +80,7 @@ describe('Client Endpoints', () => {
           }
         });
 
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(201);
       expect(response.body.name).toBe('Test Client');
       expect(response.body.cif).toBe('B87654321');
     });
@@ -128,7 +128,7 @@ describe('Client Endpoints', () => {
       expect(response.status).toBe(200);
       expect(response.body.data).toBeDefined();
       expect(response.body.data.length).toBeGreaterThan(0);
-      expect(response.body.page).toBe(1);
+      expect(response.body.pagination.currentPage).toBe(1);
     });
 
     it('should filter clients by name', async () => {

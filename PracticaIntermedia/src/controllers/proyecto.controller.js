@@ -85,8 +85,8 @@ export const getProyectos = async (req, res, next) => {
             filter.status = status;
         }
 
-        // Filtro por activo (excluye completados/suspendidos)
-        if (active === 'true') {
+        // Filtro por activo (excluye completados/suspendidos) - solo si no se especificó un status
+        if (active === 'true' && !status) {
             filter.status = { $in: ['activo', 'completado'] };
         }
 

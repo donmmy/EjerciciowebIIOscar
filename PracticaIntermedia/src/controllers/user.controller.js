@@ -5,6 +5,7 @@ import { tokenSign, longTokenSign, shortTokenSign, verifyToken } from '../utils/
 import { AppError } from '../utils/AppError.js';
 import fs from 'fs';
 import path from 'path';
+import { uploadToCloudinary } from '../utils/handleUpload.js';
 
 //get all users
 export const getAllUsers = async (req, res, next) => {
@@ -89,8 +90,7 @@ export const registerCtrl = async (req, res, next) => {
     
     res.status(201).send(data);
   } catch (err) {
-    console.log(err);
-    next(AppError.internalServerError('Error al registrar usuario'));
+    next(err);
   }
 };
 
@@ -190,14 +190,14 @@ export const loginCtrl = async (req, res, next) => {
     
     // Generar token y responder
     const data = {
-      token: tokenSign(user),
+      accessToken: shortTokenSign(user),
+      refreshToken: longTokenSign(user),
       user
     };
     
     res.send(data);
   } catch (err) {
-    console.log(err);
-    next(AppError.internalServerError('Error al iniciar sesión'));
+    next(err);
   }
 };
 
@@ -260,16 +260,13 @@ export const userLogo = async (req, res, next) => {
       throw AppError.notFound('Compañía no encontrada');
     }
 
-    // Eliminar logo anterior si existe
-    if (company.logo) {
-      const oldFilePath = path.join(path.dirname(new URL(import.meta.url).pathname), '../../uploads', path.basename(company.logo));
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath);
-      }
-    }
+    // Optimizar y subir a Cloudinary
+    const result = await uploadToCloudinary(req.file.buffer, { 
+      width: 400, 
+      folder: 'logos' 
+    });
 
-    // Actualizar URL del logo
-    const logoUrl = `/uploads/${req.file.filename}`;
+    const logoUrl = result.secure_url;
     company.logo = logoUrl;
     await company.save();
 
@@ -279,13 +276,6 @@ export const userLogo = async (req, res, next) => {
       company
     });
   } catch (error) {
-    // Si hay error, eliminar el archivo cargado
-    if (req.file) {
-      const filePath = path.join(path.dirname(new URL(import.meta.url).pathname), '../../uploads', req.file.filename);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-    }
     next(error);
   }
 };
