@@ -520,7 +520,7 @@ npm ci                   # Install con lock exacto (producción)
    - `package.json` — @slack/webhook añadido
    - `package-lock.json` — Automático
 
-### Commits
+### Commits (soy bilingue)
 
 ```bash
 git add PracticaIntermedia/src/routes/albaranes.routes.js
@@ -546,15 +546,3 @@ git push -u origin examen
 - Rama subida a origen
 - EXAMEN.md documentado
 
----
-
-## Notas Finales
-
-**Coherencia código-respuestas:**
-- Documentación Swagger lista para uso en `/api-docs`
-- Validación condicional implementada correctamente
-- Bug de truthy corregido
-- Dependencias en orden
-- Respuestas socráticas validan decisiones de arquitectura
-
-**Listo para presentación al profesor**
