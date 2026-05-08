@@ -247,7 +247,7 @@ export const deleteProyecto = async (req, res, next) => {
             throw AppError.notFound("Proyecto no encontrado");
         }
 
-        if (soft) {
+        if (soft !== 'false') {
             // Soft delete
             await deletedProyecto.softDeleteById(id);
         } else {
