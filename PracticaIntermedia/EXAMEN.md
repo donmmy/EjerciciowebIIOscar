@@ -13,7 +13,7 @@
 
 ## Parte 1 — Tarea Técnica
 
-### 1. ✅ Swagger JSDoc en `src/routes/albaranes.routes.js`
+### 1. Swagger JSDoc en `src/routes/albaranes.routes.js`
 
 **Archivos modificados:** [src/routes/albaranes.routes.js](./src/routes/albaranes.routes.js)
 
@@ -65,11 +65,11 @@ Añadidas documentaciones `@swagger` para 6 endpoints principales:
  */
 ```
 
-✅ Descubierto automáticamente por swagger-jsdoc en `/api-docs`
+Descubierto automáticamente por swagger-jsdoc en `/api-docs`
 
 ---
 
-### 2. ✅ Validación Condicional en `src/validators/deliverNote.validator.js`
+### 2. Validación Condicional en `src/validators/deliverNote.validator.js`
 
 **Archivos modificados:** [src/validators/deliverNote.validator.js](./src/validators/deliverNote.validator.js)
 
@@ -128,11 +128,11 @@ body: z.object({ ... }).superRefine((data, ctx) => {
 }
 ```
 
-✅ Validación condicional correcta sin regresiones
+Validación condicional correcta sin regresiones
 
 ---
 
-### 3. ✅ Bug de Truthy en `src/controllers/proyecto.controller.js:250`
+### 3. Bug de Truthy en `src/controllers/proyecto.controller.js:250`
 
 **Archivos modificados:** [src/controllers/proyecto.controller.js](./src/controllers/proyecto.controller.js)
 
@@ -159,15 +159,15 @@ Boolean('false')  // → true (¡no es false lógico!)
 ```
 
 **Escenarios corregidos:**
-- `?soft=true` → soft delete ✅
-- `?soft=false` → hard delete ✅ (ANTES: soft delete ❌)
-- Sin parámetro → soft delete (default) ✅
+- `?soft=true` → soft delete
+- `?soft=false` → hard delete (ANTES: soft delete)
+- Sin parámetro → soft delete (default)
 
-✅ Bug corregido, respeta operaciones de eliminación correctamente
+Bug corregido, respeta operaciones de eliminación correctamente
 
 ---
 
-### 4. ✅ Dependencia en `package.json`
+### 4. Dependencia en `package.json`
 
 **Archivos modificados:** [package.json](./package.json)
 
@@ -181,7 +181,7 @@ Ahora en `dependencies`:
 "@slack/webhook": "^6.0.0"
 ```
 
-✅ Disponible en producción (evita `MODULE_NOT_FOUND`)
+Disponible en producción (evita `MODULE_NOT_FOUND`)
 
 ---
 
@@ -227,7 +227,7 @@ router.get('/:id', handler);
 - `requestBody` con `schema: $ref`
 - Múltiples respuestas (200, 400, 404, 401)
 
-Resultado: ✅ 6 endpoints visibles en `/api-docs`
+Resultado: 6 endpoints visibles en `/api-docs`
 
 ---
 
@@ -295,10 +295,10 @@ quantity: z.number().optional(),
 
 Sí, **cualquier string no vacío es `truthy`:**
 ```javascript
-Boolean('true')   // → true ✅ Truthy
-Boolean('false')  // → true ✅ Truthy (¡STRING, no boolean!)
-Boolean('')       // → false ✅ Falsy
-Boolean(undefined) // → false ✅ Falsy
+Boolean('true')   // → true (Truthy)
+Boolean('false')  // → true (Truthy - STRING, no boolean!)
+Boolean('')       // → false (Falsy)
+Boolean(undefined) // → false (Falsy)
 ```
 
 **El problema en el código:**
@@ -330,9 +330,9 @@ if (soft !== 'false') {
 ```
 
 **Escenarios correctos ahora:**
-- Sin parámetro: `soft = undefined` → `if (undefined !== 'false')` → true → soft delete ✅
-- `?soft=true`: `soft = 'true'` → `if ('true' !== 'false')` → true → soft delete ✅
-- `?soft=false`: `soft = 'false'` → `if ('false' !== 'false')` → false → hard delete ✅
+- Sin parámetro: `soft = undefined` → `if (undefined !== 'false')` → true → soft delete
+- `?soft=true`: `soft = 'true'` → `if ('true' !== 'false')` → true → soft delete
+- `?soft=false`: `soft = 'false'` → `if ('false' !== 'false')` → false → hard delete
 
 **Mejor aún (explícito):**
 ```javascript
@@ -449,7 +449,7 @@ await Proyecto.findByIdAndUpdate(id, { deleted: true });
 **¿Qué ocurre sin la dependencia en `package.json`?**
 
 ```javascript
-import { IncomingWebhook } from '@slack/webhook';  // ❌ Error
+import { IncomingWebhook } from '@slack/webhook';  // Error
 ```
 
 **En desarrollo:**
@@ -471,7 +471,7 @@ MODULE_NOT_FOUND: Cannot find module '@slack/webhook'
 
 **Consecuencia:**
 - App colapsa al importar `handleLogger.js`
-- Error fatal → servicio caído
+- Error fatal, servicio caído
 - Error logs incomprensibles
 
 **Comando para instalar:**
@@ -496,7 +496,7 @@ npm ls @slack/webhook
 }
 ```
 
-✅ Disponible en producción (instalado en paso anterior)
+Disponible en producción (instalado en paso anterior)
 
 **Bonus — Mejores prácticas:**
 ```bash
@@ -540,11 +540,11 @@ git push -u origin examen
 
 ### Verificación
 
-- ✅ Código compila sin errores
-- ✅ Cambios en líneas correctas
-- ✅ Commits descriptivos y atómicos
-- ✅ Rama subida a origen
-- ✅ EXAMEN.md documentado
+- Código compila sin errores
+- Cambios en líneas correctas
+- Commits descriptivos y atómicos
+- Rama subida a origen
+- EXAMEN.md documentado
 
 ---
 
@@ -557,4 +557,4 @@ git push -u origin examen
 - Dependencias en orden
 - Respuestas socráticas validan decisiones de arquitectura
 
-**Listo para presentación al profesor** 🎓
+**Listo para presentación al profesor**
