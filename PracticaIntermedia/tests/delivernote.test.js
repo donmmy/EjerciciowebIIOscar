@@ -221,4 +221,116 @@ describe('DeliveryNote Endpoints', () => {
       expect(response.type).toBe('application/pdf');
     });
   });
+
+  describe('Validación Condicional', () => {
+    it('should fail when format=material without material field', async () => {
+      const response = await request(app)
+        .post('/api/deliverynote')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          projectId: projectId,
+          description: 'Invalid material',
+          format: 'material',
+          date: new Date().toISOString(),
+          quantity: 100,
+          unit: 'kg'
+          // Falta 'material'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors.some(e => e.path.includes('material'))).toBe(true);
+    });
+
+    it('should fail when format=material without quantity field', async () => {
+      const response = await request(app)
+        .post('/api/deliverynote')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          projectId: projectId,
+          description: 'Invalid quantity',
+          format: 'material',
+          date: new Date().toISOString(),
+          material: 'Cement',
+          unit: 'kg'
+          // Falta 'quantity'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors.some(e => e.path.includes('quantity'))).toBe(true);
+    });
+
+    it('should fail when format=material without unit field', async () => {
+      const response = await request(app)
+        .post('/api/deliverynote')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          projectId: projectId,
+          description: 'Invalid unit',
+          format: 'material',
+          date: new Date().toISOString(),
+          material: 'Cement',
+          quantity: 100
+          // Falta 'unit'
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors.some(e => e.path.includes('unit'))).toBe(true);
+    });
+
+    it('should fail when format=hours without hours field', async () => {
+      const response = await request(app)
+        .post('/api/deliverynote')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          projectId: projectId,
+          description: 'Invalid hours',
+          format: 'hours',
+          date: new Date().toISOString(),
+          workers: [{ name: 'Worker 1', hours: 8 }]
+          // Falta 'hours' a nivel raíz
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.errors).toBeDefined();
+      expect(response.body.errors.some(e => e.path.includes('hours'))).toBe(true);
+    });
+
+    it('should succeed when format=material with all required fields', async () => {
+      const response = await request(app)
+        .post('/api/deliverynote')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          projectId: projectId,
+          description: 'Valid material',
+          format: 'material',
+          date: new Date().toISOString(),
+          material: 'Cement',
+          quantity: 100,
+          unit: 'kg'
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.format).toBe('material');
+    });
+
+    it('should succeed when format=hours with required hours field', async () => {
+      const response = await request(app)
+        .post('/api/deliverynote')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          projectId: projectId,
+          description: 'Valid hours',
+          format: 'hours',
+          date: new Date().toISOString(),
+          hours: 8,
+          workers: [{ name: 'Worker 1', hours: 8 }]
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.format).toBe('hours');
+    });
+  });
 });
