@@ -248,11 +248,11 @@ export const deleteProyecto = async (req, res, next) => {
         }
 
         if (soft !== 'false') {
-            // Soft delete
-            await deletedProyecto.softDeleteById(id);
+            // Soft delete - método estático
+            await Proyecto.softDeleteById(id);
         } else {
-            // Hard delete
-            await deletedProyecto.hardDeleteById(id);
+            // Hard delete - método estático
+            await Proyecto.hardDeleteById(id);
         }
 
         res.status(200).json({
