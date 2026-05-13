@@ -2,6 +2,9 @@ import Proyecto from "../models/proyecto.model.js";
 import Client from "../models/client.model.js";
 import { AppError } from '../utils/AppError.js';
 import { proyectoValidator, proyectoUpdateValidator } from '../validators/proyecto.validator.js';
+import { logProjectCreated, logProjectCompleted } from '../utils/handleLogger.js';
+import { sendProjectCompletedEmail } from '../utils/handleEmail.js';
+import { broadcastToCompany } from '../services/websocket.service.js';
 
 // POST /api/project
 export const createProyecto = async (req, res, next) => {
@@ -54,14 +57,19 @@ export const createProyecto = async (req, res, next) => {
         // Populate client info
         await newProyecto.populate('client');
 
+        // Log proyecto creado
+        await logProjectCreated(newProyecto);
+
         // Emitir evento a la compañía
         const io = req.app.get('io');
-        io.to(companyId.toString()).emit('project:new', {
-            id: newProyecto._id,
-            name: newProyecto.name,
-            projectCode: newProyecto.projectCode,
-            client: newProyecto.client?.name
-        });
+        if (io) {
+            broadcastToCompany(io, companyId, 'project:new', {
+                id: newProyecto._id,
+                name: newProyecto.name,
+                projectCode: newProyecto.projectCode,
+                budget: newProyecto.budget
+            });
+        }
 
         res.status(201).json(newProyecto);
     } catch (error) {
@@ -222,6 +230,21 @@ export const updateProyecto = async (req, res, next) => {
             updateData,
             { new: true, runValidators: true }
         ).populate('client');
+
+        // Si el proyecto se marcó como completado, enviar email y log
+        if (status === 'completado' && existingProyecto.status !== 'completado') {
+            await logProjectCompleted(updatedProyecto);
+            await sendProjectCompletedEmail(req.user.email, updatedProyecto.name, updatedProyecto._id);
+            
+            // Emitir evento WebSocket
+            const io = req.app.get('io');
+            if (io) {
+                broadcastToCompany(io, companyId, 'project:completed', {
+                    id: updatedProyecto._id,
+                    name: updatedProyecto.name
+                });
+            }
+        }
 
         res.status(200).json(updatedProyecto);
     } catch (error) {
