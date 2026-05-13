@@ -8,8 +8,10 @@ import PDFDocument from 'pdfkit';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
+import { logDeliveryNoteSigned } from '../utils/handleLogger.js';
+import { sendDeliveryNoteSigned } from '../utils/handleEmail.js';
+import { broadcastToCompany } from '../services/websocket.service.js';
 import { generateDeliverNotePDF, uploadPDFToCloud, downloadFromCloud } from '../utils/handlePDF.js';
-import { uploadToCloudinary, uploadFileToCloudinary } from '../utils/handleUpload.js';
 
 // POST /api/albaranes
 export const createDeliverNote = async (req, res, next) => {
@@ -42,15 +44,6 @@ export const createDeliverNote = async (req, res, next) => {
             unit,
             hours,
             workers
-        });
-
-        // Emitir evento a la compañía
-        const io = req.app.get('io');
-        io.to(companyId.toString()).emit('deliverynote:new', {
-            id: newDeliverNote._id,
-            description: newDeliverNote.description,
-            client: project.client,
-            project: projectId
         });
         
         res.status(201).json(newDeliverNote);
@@ -330,45 +323,65 @@ export const signDeliverNote = async (req, res, next) => {
             throw AppError.badRequest('Este albarán ya está firmado y no puede modificarse');
         }
 
-        // Optimizar y subir firma a Cloudinary
-        const signatureResult = await uploadToCloudinary(req.file.buffer, { 
-            width: 800, 
-            folder: 'signatures' 
-        });
-        const signatureUrl = signatureResult.secure_url;
+        // TODO: Subir imagen de firma a Cloudinary o Cloudflare R2
+        // Aquí iría la lógica de subida a la nube
+        // const signatureUrl = await uploadToCloudinary(req.file);
+        // Por ahora usamos la ruta local
+        const signatureUrl = `/uploads/${req.file.filename}`;
 
         // Actualizar albarán con datos de firma
         deliverNote.signed = true;
         deliverNote.signedAt = new Date();
         deliverNote.signatureUrl = signatureUrl;
 
-        // Generar PDF firmado y subirlo
+        // Generar PDF firmado
         try {
             const pdfBuffer = await generateDeliverNotePDF(deliverNote);
-            const pdfResult = await uploadFileToCloudinary(pdfBuffer, {
-                folder: 'delivery_notes',
-                filename: `albaran_${deliverNote._id}`
-            });
-            deliverNote.pdfUrl = pdfResult.secure_url;
+            
+            // TODO: Subir PDF a la nube
+            // const pdfUrl = await uploadPDFToCloud(pdfBuffer, `albarán_${deliverNote._id}.pdf`);
+            // deliverNote.pdfUrl = pdfUrl;
+            
+            // Por ahora no se sube a la nube, se genera bajo demanda
         } catch (pdfError) {
-            console.error('Error generando/subiendo PDF:', pdfError);
+            console.error('Error generando PDF:', pdfError);
+            // No es crítico si falla la generación del PDF en este punto
         }
 
         await deliverNote.save();
 
-        // Emitir evento a la compañía
+        // Log de firma
+        await logDeliveryNoteSigned(deliverNote, deliverNote.client?.name);
+        
+        // Enviar email
+        await sendDeliveryNoteSigned(req.user.email, deliverNote.client?.name, deliverNote._id);
+        
+        // Emitir evento WebSocket
         const io = req.app.get('io');
-        io.to(companyId.toString()).emit('deliverynote:signed', {
-            id: deliverNote._id,
-            signedAt: deliverNote.signedAt,
-            pdfUrl: deliverNote.pdfUrl
-        });
+        if (io) {
+            broadcastToCompany(io, companyId, 'deliverynote:signed', {
+                id: deliverNote._id,
+                signedBy: deliverNote.client?.name,
+                timestamp: new Date()
+            });
+        }
 
         res.json({
             message: 'Albarán firmado correctamente',
             data: deliverNote
         });
     } catch (error) {
+        // Eliminar archivo cargado si hay error
+        if (req.file) {
+            const filePath = path.join(
+                path.dirname(new URL(import.meta.url).pathname),
+                '../../uploads',
+                req.file.filename
+            );
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
         next(error);
     }
 };
