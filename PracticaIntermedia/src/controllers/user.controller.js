@@ -6,6 +6,8 @@ import { AppError } from '../utils/AppError.js';
 import fs from 'fs';
 import path from 'path';
 import { uploadToCloudinary } from '../utils/handleUpload.js';
+import { sendWelcomeEmail, sendVerificationCodeEmail } from '../utils/handleEmail.js';
+import { logUserRegistered } from '../utils/handleLogger.js';
 
 //get all users
 export const getAllUsers = async (req, res, next) => {
@@ -87,6 +89,13 @@ export const registerCtrl = async (req, res, next) => {
       accessToken: shortTokenSign(dataUser),
       user: dataUser
     };
+    
+    // Enviar emails
+    await sendWelcomeEmail(dataUser.email, dataUser.name);
+    await sendVerificationCodeEmail(dataUser.email, verificationCode);
+    
+    // Log usuario registrado
+    await logUserRegistered(dataUser);
     
     res.status(201).send(data);
   } catch (err) {

@@ -3,6 +3,8 @@ import User from "../models/user.model.js";
 import Company from "../models/company.model.js";
 import { AppError } from '../utils/AppError.js';
 import { clientValidator, clientUpdateValidator } from '../validators/client.validator.js';
+import { logClientCreated } from '../utils/handleLogger.js';
+import { broadcastToCompany } from '../services/websocket.service.js';
 
 // POST /api/client
 export const createClient = async (req, res, next) => {
@@ -36,14 +38,20 @@ export const createClient = async (req, res, next) => {
             phone,
             address
         });
-
-        // Emitir evento a la compañía
+        
+        // Log cliente creado
+        await logClientCreated(newClient);
+        
+        // Emitir evento WebSocket
         const io = req.app.get('io');
-        io.to(companyId.toString()).emit('client:new', {
-            id: newClient._id,
-            name: newClient.name,
-            cif: newClient.cif
-        });
+        if (io) {
+            broadcastToCompany(io, companyId, 'client:new', {
+                id: newClient._id,
+                name: newClient.name,
+                cif: newClient.cif,
+                createdBy: userId
+            });
+        }
         
         res.status(201).json(newClient);
     } catch (error) {
@@ -179,12 +187,12 @@ export const deleteClient = async (req, res, next) => {
             throw AppError.notFound("Cliente no encontrado");
         }
 
-        if (soft !== 'false') {
-            // Soft delete (predeterminado)
-            await deletedClient.softDelete();
+        if (soft) {
+            // Soft delete
+            await deletedClient.softDelete(id);
         } else {
             // Hard delete
-            await Client.hardDelete(id);
+            await deletedClient.hardDeleteById(id);
         }
 
         res.status(200).json({ 

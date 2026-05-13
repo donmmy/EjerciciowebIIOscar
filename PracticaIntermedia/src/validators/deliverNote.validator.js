@@ -35,41 +35,6 @@ export const deliverNoteValidator = z.object({
                     .min(0, "Las horas del trabajador deben ser mayores o iguales a 0")
             })
         ).optional()
-    }).superRefine((data, ctx) => {
-        // Validación condicional según format
-        if (data.format === 'material') {
-            if (!data.material) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    path: ['material'],
-                    message: "Cuando format es 'material', el campo material es obligatorio"
-                });
-            }
-            if (data.quantity === undefined || data.quantity === null) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    path: ['quantity'],
-                    message: "Cuando format es 'material', el campo quantity es obligatorio"
-                });
-            }
-            if (!data.unit) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    path: ['unit'],
-                    message: "Cuando format es 'material', el campo unit es obligatorio"
-                });
-            }
-        }
-        
-        if (data.format === 'hours') {
-            if (data.hours === undefined || data.hours === null) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    path: ['hours'],
-                    message: "Cuando format es 'hours', el campo hours es obligatorio"
-                });
-            }
-        }
     }),
     query: z.object({}).optional(),
     params: z.object({}).optional()
